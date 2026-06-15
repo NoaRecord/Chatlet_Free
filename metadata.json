@@ -1,0 +1,6 @@
+{
+  "name": "Chatlet Bookmarklet Toolkit",
+  "description": "An open-source Bookmarklet toolkit and customizer for ChatGPT. Fully client-side, customizable, and designed for learning and AI-assisted development.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
