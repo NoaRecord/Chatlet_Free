@@ -21,7 +21,8 @@ import {
   Github,
   Folder,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Heart
 } from 'lucide-react';
 import {
   presetPacks,
@@ -320,6 +321,8 @@ export default function App() {
       buttonValue: '送信されるプロンプト',
       generatorTitle: '🛠 ブックマークレット・カスタマイザー',
       generatorDesc: 'ボタンの数やプロンプト内容を完全にカスタマイズした、あなた専用のブックマークレットを生成します。',
+      generatorRecommend: '👉 【推奨】設定を自分用に調整したカスタムブックマークレットを作成する方が圧倒的に便利（簡単登録可能）です！',
+      starAppeals: '気に入っていただけたらStar⭐をお願いします！',
       installHeader: '📥 ブックマークレットの登録手順',
       learnHeader: '📚 OSSと教材の架け橋 (Learn)',
       videosHeader: '🎥 レクチャー ＆ 実例動画集',
@@ -358,10 +361,56 @@ export default function App() {
       buttonValue: 'Target Prompt Content',
       generatorTitle: '🛠 Draggable Bookmarklet Generator',
       generatorDesc: 'Specify original button pairs, edit title values or switch colors. No database required—works 100% in local memory!',
+      generatorRecommend: '👉 [Recommended] Creating a customized bookmarklet with your preferred presets is extremely convenient!',
+      starAppeals: 'If you like Chatlet, please give us a Star⭐!',
       installHeader: '📥 Installation & Setup Instructions',
       learnHeader: '📚 Educational Blueprints (Learn)',
       videosHeader: '🎥 Video Courses & Standard Editions',
       repoHeader: '📂 OSS GitHub Repository Tree Explorer'
+    }
+  };
+
+  // =========================================================================
+  // 【応援・寄付（Sponsor）定義】将来の拡張性を持たせるため、ここで一元管理しています。
+  // 将来的にGitHub Sponsorsなどを追加・変更する際は、ここを編集・追加するだけでOKです。
+  // =========================================================================
+  const SPONSOR_CONFIG = {
+    links: [
+      {
+        id: 'ko-fi',
+        labelJa: 'Ko-fi でサポート',
+        labelEn: 'Support on Ko-fi',
+        url: 'https://ko-fi.com/noarecord',
+        descJa: '一杯のコーヒー代から開発者を支援',
+        descEn: 'Buy the developer a coffee',
+      },
+      {
+        id: 'ofuse',
+        labelJa: 'OFUSE（送金・ファンレター）',
+        labelEn: 'Support on OFUSE',
+        url: 'https://ofuse.me/o?uid=142448',
+        descJa: 'メッセージと共に支援を送ることができます',
+        descEn: 'Send a warm message with funding',
+      },
+      /* 
+      // 【将来GitHub Sponsorsを有効化する際は、こちらのコメントアウトを解除・編集してください】
+      {
+        id: 'github-sponsors',
+        labelJa: 'GitHub Sponsors',
+        labelEn: 'GitHub Sponsors',
+        url: 'https://github.com/sponsors/あなたのユーザー名', // または Organization 名
+        descJa: 'GitHub を通じて継続的な寄付・スポンサーを行います',
+        descEn: 'Support open-source development directly on GitHub',
+      }
+      */
+    ],
+    header: {
+      ja: '開発を応援する (Sponsor)',
+      en: 'Sponsor & Support'
+    },
+    footerNote: {
+      ja: 'Chatlet Freeは完全無料かつオープンソースで提供されています。もし気に入っていただけましたら、開発の継続的なアップデートやより良いコンテンツ作成をご支援いただけますと大変励みになります！',
+      en: 'Chatlet Free is 100% free and open-source. If you find it helpful, please consider supporting development to inspire continuous maintenance and security updates!'
     }
   };
 
@@ -420,6 +469,21 @@ export default function App() {
       draggableLinkRef.current.href = compiledCode.bookmarklet;
     }
   }, [compiledCode.bookmarklet]);
+
+  useEffect(() => {
+    // Dynamic execution parser for standard GitHub Star buttons to guarantee clean cross-react-render bindings
+    const scriptId = 'github-buttons-js';
+    const oldScript = document.getElementById(scriptId);
+    if (oldScript) {
+      oldScript.remove();
+    }
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = 'https://buttons.github.io/buttons.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, [activeTab, lang]);
 
   const triggerCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -499,17 +563,17 @@ export default function App() {
       
       {/* Premium Multi-lingual Nav bar */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
-              <Bookmark className="w-5 h-5" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 shrink-0 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-neutral-950 flex items-center justify-center text-white shadow-md shadow-neutral-200 shrink-0">
+              <Bookmark className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <span className="font-display font-medium text-lg tracking-tight select-none block">
-                Chatlet <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-mono ml-1 font-bold">Free</span>
+            <div className="min-w-0 select-none">
+              <span className="font-display font-extrabold text-base sm:text-lg tracking-tight block text-neutral-900 truncate">
+                Chatlet <span className="text-[10px] bg-neutral-100 text-neutral-800 px-1.5 py-0.5 rounded font-mono ml-0.5 font-bold">Free</span>
               </span>
-              <span className="text-[10px] text-neutral-400 font-mono block -mt-1 uppercase tracking-wider">
-                Bookmarklet OSS v2.0
+              <span className="text-[9px] text-neutral-400 font-mono block -mt-1 uppercase tracking-wider">
+                OSS Bookmarklet v2.0
               </span>
             </div>
           </div>
@@ -531,13 +595,13 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all select-none ${
                     isSelected
-                      ? 'bg-indigo-50 text-indigo-600 font-medium'
+                      ? 'bg-neutral-900 text-white shadow-sm shadow-neutral-200/50'
                       : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100'
                   }`}
                 >
-                  <TabIcon className="w-4 h-4" />
+                  <TabIcon className="w-3.5 h-3.5" />
                   {tab.label}
                 </button>
               );
@@ -545,27 +609,27 @@ export default function App() {
           </nav>
 
           {/* Action Flags */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
             <a
               href="https://another-world.site/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 text-xs text-neutral-600 hover:text-indigo-600 font-semibold px-2 py-1 transition-colors"
+              className="hidden lg:flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-950 font-medium px-2 py-1.5 transition-colors whitespace-nowrap"
             >
               NoaRecord <ExternalLink className="w-3 h-3 text-neutral-400" />
             </a>
             <button
               onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}
-              className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 rounded-lg transition-transform active:scale-95 border border-neutral-200"
+              className="flex items-center gap-1 text-[11px] sm:text-xs text-neutral-600 hover:text-neutral-950 bg-neutral-100 hover:bg-neutral-200/80 px-2.5 py-1.5 rounded-lg transition-transform active:scale-95 border border-neutral-200/80 shrink-0 whitespace-nowrap select-none font-medium"
             >
-              <Globe className="w-3.5 h-3.5 text-indigo-500" />
-              <span>{lang === 'ja' ? 'English' : '日本語'}</span>
+              <Globe className="w-3.5 h-3.5 text-neutral-500" />
+              <span>{lang === 'ja' ? 'EN' : 'JA'}</span>
             </button>
             <a
-              href="https://github.com"
+              href="https://github.com/NoaRecord/Chatlet_Free"
               target="_blank"
               rel="noreferrer"
-              className="w-9 h-9 rounded-full bg-neutral-900 hover:bg-neutral-800 flex items-center justify-center text-white md:flex transition-transform hover:scale-105"
+              className="w-8 h-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 flex items-center justify-center text-white shrink-0 transition-transform hover:scale-105 active:scale-95 shadow-sm"
               title="GitHub Repository"
             >
               <Github className="w-4 h-4" />
@@ -574,14 +638,15 @@ export default function App() {
         </div>
       </header>
 
-      {/* Mobile Nav Drawer */}
-      <div className="md:hidden flex items-center justify-around bg-white border-b border-neutral-200 py-2.5 px-2 text-[11px] font-medium sticky top-16 z-40">
+      {/* Mobile Nav Bar - Scrollable, Modern Single-Line Tab Strip */}
+      <div className="md:hidden flex items-center gap-1.5 bg-white border-b border-neutral-200 py-2.5 px-4 sticky top-16 z-40 overflow-x-auto scrollbar-none whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x select-none">
         {[
           { id: 'home', label: lang === 'ja' ? 'トップ' : 'Home' },
-          { id: 'examples', label: lang === 'ja' ? 'パック' : 'Packs' },
-          { id: 'generator', label: lang === 'ja' ? '作成' : 'Create' },
-          { id: 'install', label: lang === 'ja' ? '登録' : 'Install' },
-          { id: 'learn', label: lang === 'ja' ? '学習' : 'Learn' },
+          { id: 'examples', label: lang === 'ja' ? 'レシピ集' : 'Examples' },
+          { id: 'generator', label: lang === 'ja' ? 'ジェネレーター' : 'Generator' },
+          { id: 'install', label: lang === 'ja' ? 'インストール' : 'Install' },
+          { id: 'learn', label: lang === 'ja' ? '学習教材' : 'Learn' },
+          { id: 'videos', label: lang === 'ja' ? '動画' : 'Videos' },
           { id: 'repo', label: lang === 'ja' ? 'リポジトリ' : 'Repo' },
         ].map((tab) => {
           const isSelected = activeTab === tab.id;
@@ -589,8 +654,10 @@ export default function App() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-2 py-1 rounded transition-colors ${
-                isSelected ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-neutral-600'
+              className={`px-3 py-2 text-xs rounded-lg transition-all shrink-0 whitespace-nowrap snap-center font-semibold ${
+                isSelected
+                  ? 'bg-neutral-900 text-white shadow-sm'
+                  : 'text-neutral-500 hover:text-neutral-950 active:bg-neutral-100'
               }`}
             >
               {tab.label}
@@ -603,49 +670,76 @@ export default function App() {
         
         {/* HERO SECTION - HOME TAB */}
         {activeTab === 'home' && (
-          <div className="animate-fade-in">
-            {/* Visual Header */}
-            <div className="bg-gradient-to-b from-indigo-50/70 via-indigo-50/20 to-transparent py-14 sm:py-20 border-b border-neutral-100">
+          <div className="animate-fade-in animate-duration-300">
+            {/* Visual Header - Sleek Minimal Canvas */}
+            <div className="bg-gradient-to-b from-neutral-100/60 via-neutral-50/10 to-transparent py-14 sm:py-20 border-b border-neutral-200/50">
               <div className="max-w-4xl mx-auto px-4 select-none text-center">
                 <div className="mb-6 flex justify-center flex-col sm:flex-row items-center gap-2">
-                  <span className="inline-flex items-center gap-1 bg-indigo-100/80 text-indigo-700 border border-indigo-200/50 px-2.5 py-1 rounded-full text-xs font-mono font-semibold tracking-wider uppercase">
-                    <Cpu className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+                  <span className="inline-flex items-center gap-1 bg-neutral-900 text-neutral-100 px-2.5 py-1 rounded-full text-xs font-mono font-medium tracking-wider uppercase shadow-sm">
+                    <Cpu className="w-3.5 h-3.5 text-neutral-300 animate-pulse" />
                     Chatlet Free Project
                   </span>
                   <a
                     href="https://another-world.site/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 bg-neutral-100 ring-1 ring-neutral-200 hover:bg-white hover:ring-indigo-300 px-3 py-1 rounded-full text-xs text-neutral-600 hover:text-indigo-600 font-medium transition-all group"
+                    className="inline-flex items-center gap-1 bg-white ring-1 ring-neutral-250 hover:bg-neutral-50 px-3 py-1 rounded-full text-xs text-neutral-600 hover:text-neutral-900 font-medium transition-all group"
                   >
                     <span>Presented by <strong>NoaRecord</strong></span>
-                    <ExternalLink className="w-3 h-3 text-neutral-400 group-hover:text-indigo-500 transition-colors" />
+                    <ExternalLink className="w-3 h-3 text-neutral-400 group-hover:text-neutral-800 transition-colors" />
                   </a>
                 </div>
-                <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-neutral-900 tracking-tight leading-none mb-6">
+                <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-neutral-955 tracking-tight leading-none mb-6">
                   <span className="inline-block whitespace-nowrap">Use it.</span>{' '}
                   <span className="inline-block whitespace-nowrap">Customize it.</span>{' '}
                   <br className="hidden sm:inline" />
-                  <span className="inline-block whitespace-nowrap text-indigo-600">Learn from it.</span>
+                  <span className="inline-block whitespace-nowrap text-neutral-900 underline decoration-neutral-300 underline-offset-8 decoration-4">Learn from it.</span>
                 </h1>
                 <p className="text-neutral-500 font-sans font-light text-base sm:text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
                   {activeLang.heroDesc}
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none">
                   <button
                     onClick={() => setActiveTab('install')}
-                    className="w-full sm:w-auto bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-8 py-3.5 rounded-xl transition-all shadow-lg shadow-neutral-200 flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
+                    className="w-full sm:w-auto bg-neutral-950 hover:bg-neutral-800 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 text-sm select-none"
                   >
                     <Download className="w-4 h-4" />
                     <span>{activeLang.ctaInstall}</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('generator')}
-                    className="w-full sm:w-auto bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 font-medium px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
+                    className="w-full sm:w-auto bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300/85 font-semibold px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 text-sm shadow-sm select-none"
                   >
                     <Settings className="w-4 h-4 text-neutral-500" />
                     <span>{activeLang.ctaCustomize}</span>
                   </button>
+                </div>
+
+                {/* Recommended Customize Alert & GitHub Star Callout within Hero block */}
+                <div className="mt-8 flex flex-col items-center gap-3.5 max-w-xl mx-auto">
+                  <button
+                    onClick={() => setActiveTab('generator')}
+                    className="w-full bg-neutral-900 hover:bg-neutral-800 border border-neutral-950 text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all hover:scale-[1.01] shadow-md select-none text-center"
+                  >
+                    <span>{activeLang.generatorRecommend}</span>
+                  </button>
+
+                  <div className="inline-flex items-center gap-3 bg-neutral-100 border border-neutral-200 px-4 py-2 rounded-2xl shadow-sm text-neutral-700">
+                    <span className="text-xs font-semibold">
+                      {activeLang.starAppeals}
+                    </span>
+                    <div className="flex items-center min-h-[28px]">
+                      <a
+                        className="github-button"
+                        href="https://github.com/NoaRecord/Chatlet_Free"
+                        data-icon="octicon-star"
+                        data-size="large"
+                        aria-label="Star NoaRecord/Chatlet_Free on GitHub"
+                      >
+                        Star
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -662,8 +756,8 @@ export default function App() {
                   if (idx === 2) IconComponent = Sparkles;
                   return (
                     <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-200/60 hover:shadow-md transition-shadow relative overflow-hidden group">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-                      <div className="w-12 h-12 rounded-xl bg-neutral-100 text-neutral-700 flex items-center justify-center mb-5 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-neutral-950 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
+                      <div className="w-12 h-12 rounded-xl bg-neutral-100 text-neutral-800 flex items-center justify-center mb-5 group-hover:bg-neutral-950 group-hover:text-white transition-colors">
                         <IconComponent className="w-5 h-5" />
                       </div>
                       <h3 className="font-display font-semibold text-lg text-neutral-900 mb-2.5">
@@ -682,7 +776,7 @@ export default function App() {
             <div className="bg-neutral-100 py-16 border-y border-neutral-200 animate-fade-in">
               <div className="max-w-5xl mx-auto px-4">
                 <div className="text-center mb-10">
-                  <span className="inline-block bg-indigo-100 text-indigo-800 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full mb-3">
+                  <span className="inline-block bg-neutral-900 text-white text-[11px] font-mono font-bold px-2.5 py-1 rounded-full mb-3">
                     {lang === 'ja' ? '💡 本番のChatGPTで動作する本来の姿' : '💡 Actual Behavior on ChatGPT'}
                   </span>
                   <h2 className="font-display font-bold text-2xl sm:text-3xl text-neutral-900 tracking-tight mb-2">
@@ -695,7 +789,7 @@ export default function App() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                   <div className="bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold font-mono text-sm mb-4">A</div>
+                    <div className="w-10 h-10 rounded-lg bg-neutral-100 text-neutral-800 flex items-center justify-center font-bold font-mono text-sm mb-4">A</div>
                     <h4 className="font-semibold text-neutral-900 mb-2">
                       {lang === 'ja' ? '1. プリセットボタンで瞬時入力' : '1. Instantly Inject Presets'}
                     </h4>
@@ -704,7 +798,7 @@ export default function App() {
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold font-mono text-sm mb-4">B</div>
+                    <div className="w-10 h-10 rounded-lg bg-neutral-100 text-neutral-800 flex items-center justify-center font-bold font-mono text-sm mb-4">B</div>
                     <h4 className="font-semibold text-neutral-900 mb-2">
                       {lang === 'ja' ? '2. 自由入力(1行) ＆ 送信(↵)を完備' : '2. Custom Input & Send Prompt (↵)'}
                     </h4>
@@ -713,7 +807,7 @@ export default function App() {
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold font-mono text-sm mb-4">C</div>
+                    <div className="w-10 h-10 rounded-lg bg-neutral-100 text-neutral-800 flex items-center justify-center font-bold font-mono text-sm mb-4">C</div>
                     <h4 className="font-semibold text-neutral-900 mb-2">
                       {lang === 'ja' ? '3. 最新10ターンのみ表示' : '3. Keep Latest 10 Turns'}
                     </h4>
@@ -735,7 +829,7 @@ export default function App() {
               </p>
               <button
                 onClick={() => setActiveTab('install')}
-                className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-semibold text-sm transition-colors group"
+                className="inline-flex items-center gap-1 text-neutral-900 hover:text-neutral-950 font-semibold text-sm transition-colors group"
               >
                 <span>詳しい登録ガイドを見る</span>
                 <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
@@ -749,7 +843,7 @@ export default function App() {
         {activeTab === 'examples' && (
           <div className="max-w-4xl mx-auto px-4 py-12 animate-fade-in">
             <div className="border-b border-neutral-200 pb-6 mb-10">
-              <span className="text-xs bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider font-mono">
+              <span className="text-xs bg-neutral-900 text-white font-bold px-2.5 py-1 rounded-full uppercase tracking-wider font-mono shadow-sm">
                 Prompt Catalog v2.0
               </span>
               <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-neutral-900 tracking-tight mt-3 mb-2">
@@ -780,9 +874,9 @@ export default function App() {
                       </div>
                       <button
                         onClick={() => handleApplyPackToGenerator(pack)}
-                        className="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold px-4 py-2 rounded-lg transition-colors border border-indigo-100"
+                        className="inline-flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-bold px-4 py-2 rounded-lg transition-colors border border-neutral-200/80 shrink-0 self-start sm:self-auto"
                       >
-                        <Settings className="w-3.5 h-3.5" />
+                        <Settings className="w-3.5 h-3.5 text-neutral-500" />
                         <span>{activeLang.applyBtn}</span>
                       </button>
                     </div>
@@ -793,16 +887,16 @@ export default function App() {
                         const copyId = `${pack.id}-${idx}`;
                         const isCopied = copyState[copyId];
                         return (
-                          <div key={idx} className="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 flex flex-col justify-between group hover:border-neutral-300 transition-colors">
+                          <div key={idx} className="bg-neutral-50 border border-neutral-200/60 rounded-xl p-3.5 flex flex-col justify-between group hover:border-neutral-300 transition-colors">
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <span className="font-display font-semibold text-sm text-neutral-800">
+                              <span className="font-display font-semibold text-sm text-neutral-850">
                                 {preset.label}
                               </span>
                               <button
                                 onClick={() => triggerCopy(preset.value, copyId)}
-                                className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${
+                                className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all shrink-0 ${
                                   isCopied
-                                    ? 'bg-green-100 border-green-300 text-green-700'
+                                    ? 'bg-green-100 border-green-300 text-green-700 font-bold'
                                     : 'bg-white border-neutral-200 text-neutral-400 hover:text-neutral-800'
                                 }`}
                                 title="Copy prompt template"
@@ -810,7 +904,7 @@ export default function App() {
                                 {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                               </button>
                             </div>
-                            <p className="text-neutral-500 text-xs font-mono bg-white/60 p-2 rounded border border-neutral-100 max-h-24 overflow-y-auto whitespace-pre-wrap leading-relaxed select-all">
+                            <p className="text-neutral-500 text-xs font-mono bg-white/60 p-2.5 rounded border border-neutral-200/50 max-h-24 overflow-y-auto whitespace-pre-wrap leading-relaxed select-all">
                               {preset.value}
                             </p>
                           </div>
@@ -839,16 +933,16 @@ export default function App() {
               </p>
 
               {/* Informative top banner explaining real-time generation */}
-              <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-xs text-indigo-800 leading-relaxed mb-6 font-sans flex items-start gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+              <div className="bg-neutral-100 border border-neutral-200 p-4 rounded-xl text-xs text-neutral-850 leading-relaxed mb-6 font-sans flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-neutral-700 shrink-0 mt-0.5 animate-pulse" />
                 <div>
-                  <span className="font-bold block mb-0.5">
+                  <span className="font-bold block text-neutral-900 mb-0.5">
                     {lang === 'ja' ? '💡 リアルタイム自動生成・即座反映' : '💡 Real-time Auto-compiled Specs'}
                   </span>
                   <span>
                     {lang === 'ja' 
                       ? '左側のパラメータを変更すると、右側の「実行コード」および「ドラッグ可能なブックマークボタン」へリアルタイムに即座反映されます。手動による作成を明示的に検証されたい場合は、最下部の作成ボタンもご利用いただけます。'
-                      : 'Parameters customized on the left instantly adjust the draggable bookmarklet and copyable executable codes in the right column. No manual compiling is strictly required.'
+                      : 'Parameters customized on the left instantly adjust the draggable bookmarklet and copyable executable codes in the right column. No manual compiling is required.'
                     }
                   </span>
                 </div>
@@ -864,7 +958,7 @@ export default function App() {
                     type="text"
                     value={customTitle}
                     onChange={(e) => setCustomTitle(e.target.value)}
-                    className="w-full bg-neutral-50 border border-neutral-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-neutral-50 border border-neutral-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
                   />
                 </div>
 
@@ -875,17 +969,17 @@ export default function App() {
                   </label>
                   <div className="flex flex-wrap gap-2.5">
                     {[
-                      { hex: '#4f46e5', name: 'Royal Indigo' },
+                      { hex: '#18181b', name: 'Charcoal Minimal' },
                       { hex: '#1e3a8a', name: 'Navy Blue' },
+                      { hex: '#0f172a', name: 'Slate Gray' },
                       { hex: '#064e3b', name: 'Forest Green' },
                       { hex: '#991b1b', name: 'Dark Crimson' },
-                      { hex: '#6b21a8', name: 'Night Violet' },
-                      { hex: '#171717', name: 'Charcoal Minimal' }
+                      { hex: '#6b21a8', name: 'Night Violet' }
                     ].map((theme) => (
                       <button
                         key={theme.hex}
                         onClick={() => setCustomTheme(theme.hex)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all text-white`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-white`}
                         style={{ backgroundColor: theme.hex }}
                       >
                         {customTheme === theme.hex && <Check className="w-3.5 h-3.5" />}
@@ -909,9 +1003,9 @@ export default function App() {
                       <button
                         key={opt.id}
                         onClick={() => setCustomWidth(opt.id as any)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                           customWidth === opt.id
-                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                            ? 'bg-neutral-900 text-white border-neutral-900 shadow-sm'
                             : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100 hover:border-neutral-300'
                         }`}
                       >
@@ -929,7 +1023,7 @@ export default function App() {
                         type="checkbox"
                         checked={enableLimit}
                         onChange={(e) => setEnableLimit(e.target.checked)}
-                        className="w-4 h-4 accent-indigo-600 rounded"
+                        className="w-4 h-4 accent-neutral-950 rounded"
                       />
                       <span className="font-semibold">{activeLang.limitCountLabel}</span>
                     </label>
@@ -945,7 +1039,7 @@ export default function App() {
                       disabled={!enableLimit}
                       value={customLimit}
                       onChange={(e) => setCustomLimit(parseInt(e.target.value, 10))}
-                      className="w-full bg-neutral-50 border border-neutral-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-40"
+                      className="w-full bg-neutral-50 border border-neutral-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 disabled:opacity-40"
                     />
                   </div>
                 </div>
@@ -959,11 +1053,11 @@ export default function App() {
                   <div className="space-y-2.5 max-h-[220px] overflow-y-auto mb-3 pr-1">
                     {customPresets.map((preset, idx) => (
                       <div key={idx} className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl">
-                        <span className="text-xs font-mono font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
+                        <span className="text-xs font-mono font-bold bg-neutral-200 text-neutral-800 px-1.5 py-0.5 rounded">
                           BTN {idx + 1}
                         </span>
-                        <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <span className="text-xs font-semibold text-neutral-800 font-sans truncate sm:col-span-1">
+                        <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-2 min-w-0">
+                          <span className="text-xs font-bold text-neutral-800 font-sans truncate sm:col-span-1">
                             {preset.label}
                           </span>
                           <span className="text-[11px] text-neutral-500 font-mono truncate sm:col-span-2">
@@ -990,22 +1084,22 @@ export default function App() {
                         placeholder="例：進めて / Continue"
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
-                        className="bg-white border text-xs border-neutral-300 rounded-xl px-3 py-2 focus:outline-none"
+                        className="bg-white border text-xs border-neutral-300 rounded-xl px-3 py-2 focus:outline-none focus:border-neutral-900"
                       />
                       <input
                         type="text"
                         placeholder="例：詳細な説明を継続して / Continue detailed..."
                         value={newValue}
                         onChange={(e) => setNewValue(e.target.value)}
-                        className="bg-white border text-xs border-neutral-300 rounded-xl px-3 py-2 focus:outline-none"
+                        className="bg-white border text-xs border-neutral-300 rounded-xl px-3 py-2 focus:outline-none focus:border-neutral-900"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={addNewPresetItem}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+                      className="w-full bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-1 transition-colors shadow-sm"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3.5 h-3.5 opacity-90" />
                       <span>{activeLang.addPreset}</span>
                     </button>
                   </div>
@@ -1019,7 +1113,7 @@ export default function App() {
                     onClick={() => {
                       triggerCopy(compiledCode.bookmarklet, 'compile-trigger');
                     }}
-                    className="w-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+                    className="w-full bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md"
                   >
                     <Cpu className="w-4 h-4 text-emerald-400" />
                     <span>
@@ -1044,8 +1138,8 @@ export default function App() {
                 </span>
                 
                 {/* 1. THE DRAGGABLE ANCHOR LINK BLOCK */}
-                <div className="bg-neutral-800 rounded-2xl p-5 border border-neutral-700 text-center mb-6 shadow-inner relative overflow-hidden group">
-                  <div className="absolute top-2 right-2 text-[9px] font-mono text-neutral-400 bg-neutral-900 border border-neutral-700 px-1.5 py-0.5 rounded">
+                <div className="bg-neutral-850 rounded-2xl p-5 border border-neutral-850 text-center mb-6 shadow-inner relative overflow-hidden group">
+                  <div className="absolute top-2 right-2 text-[9px] font-mono text-neutral-400 bg-neutral-950 border border-neutral-800 px-1.5 py-0.5 rounded">
                     Draggable Link
                   </div>
                   <h4 className="font-display font-semibold text-xs text-neutral-400 mb-3">
@@ -1063,7 +1157,7 @@ export default function App() {
                         : 'Do not click this button directly. Instead, drag and drop it onto your browser bookmarks toolbar to install!'
                       );
                     }}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl shadow-lg transition-all border font-sans text-sm font-semibold text-white bg-indigo-600 border-indigo-400 hover:bg-indigo-500 hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing hover:shadow-indigo-500/20"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl shadow-lg transition-all border font-sans text-sm font-bold text-white hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
                     style={{ backgroundColor: customTheme, borderColor: customTheme }}
                   >
                     <Bookmark className="w-4 h-4 fill-white" />
@@ -1081,9 +1175,9 @@ export default function App() {
                     <span className="text-neutral-400 font-semibold font-mono">Minified Executable JS</span>
                     <button
                       onClick={() => triggerCopy(compiledCode.bookmarklet, 'min-copy')}
-                      className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
+                      className="text-xs text-neutral-300 hover:text-white font-semibold flex items-center gap-1 transition-colors"
                     >
-                      {copyState['min-copy'] ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copyState['min-copy'] ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5 text-neutral-400" />}
                       <span>{copyState['min-copy'] ? activeLang.copied : 'Copy Code'}</span>
                     </button>
                   </div>
@@ -1098,9 +1192,9 @@ export default function App() {
                     <span className="text-neutral-400 font-semibold font-mono">Custom Raw Source</span>
                     <button
                       onClick={() => triggerCopy(compiledCode.sourceCode, 'source-copy')}
-                      className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
+                      className="text-xs text-neutral-300 hover:text-white font-semibold flex items-center gap-1 transition-colors"
                     >
-                      {copyState['source-copy'] ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copyState['source-copy'] ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5 text-neutral-400" />}
                       <span>{copyState['source-copy'] ? activeLang.copied : 'Copy Source'}</span>
                     </button>
                   </div>
@@ -1111,11 +1205,35 @@ export default function App() {
 
               </div>
 
-              <div className="border-t border-neutral-800 pt-4 mt-4 text-[10px] text-neutral-500 leading-normal flex items-start gap-2 select-none">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                <span>
-                  No background servers are referenced. The customization compiler compiles code 100% locally via dynamic client strings. Use, modify, and learn freely!
-                </span>
+              <div className="border-t border-neutral-800 pt-4 mt-4 text-[10px] text-neutral-500 leading-normal flex flex-col gap-3.5 select-none animate-fade-in">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-neutral-400 shrink-0 mt-0.5" />
+                  <span>
+                    No background servers are referenced. The customization compiler compiles code 100% locally via dynamic client strings. Use, modify, and learn freely!
+                  </span>
+                </div>
+                {/* Customizer specific GitHub Star promotion panel */}
+                <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-neutral-300">
+                  <div className="text-left">
+                    <span className="font-mono text-[9px] text-neutral-400 block font-bold uppercase tracking-wider mb-0.5">
+                      Support Chatlet Free
+                    </span>
+                    <span className="text-[11px] font-medium block">
+                      {activeLang.starAppeals}
+                    </span>
+                  </div>
+                  <div className="flex items-center min-h-[28px] shrink-0">
+                    <a
+                      className="github-button"
+                      href="https://github.com/NoaRecord/Chatlet_Free"
+                      data-icon="octicon-star"
+                      data-size="large"
+                      aria-label="Star NoaRecord/Chatlet_Free on GitHub"
+                    >
+                      Star
+                    </a>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -1141,18 +1259,18 @@ export default function App() {
               {/* DESKTOP GUIDES */}
               <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="w-6 h-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center font-display font-bold text-xs text-indigo-700">1</span>
+                  <span className="w-6 h-6 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center font-display font-semibold text-xs text-neutral-700">1</span>
                   <span className="font-display font-bold text-base text-neutral-900">PC（Chrome / Safari / Edge / Firefox）での登録</span>
                 </div>
                 <div className="ml-8 space-y-3.5 text-sm text-neutral-600 leading-relaxed font-sans">
                   <div className="bg-neutral-50 p-4 border border-neutral-100 rounded-xl flex items-center justify-between gap-4">
                     <div>
                       <span className="block font-bold text-neutral-800">ドラッグ＆ドロップだけで完了：</span>
-                      <span className="text-xs text-neutral-400">ブックマークバーにお好みのボタンを直接ドラッグします。詳細はジェネレータータブの青ボタンを参照してください。</span>
+                      <span className="text-xs text-neutral-400">ブックマークバーにお好みのボタンを直接ドラッグします。詳細はジェネレータータブを参照してください。</span>
                     </div>
                     <button
                       onClick={() => setActiveTab('generator')}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 hover:shadow-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-transform active:scale-95"
+                      className="bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg px-4 py-2 hover:shadow-md text-xs font-semibold whitespace-nowrap shrink-0 transition-transform active:scale-95"
                     >
                       ジェネレーターへ移動
                     </button>
@@ -1172,7 +1290,7 @@ export default function App() {
               {/* MOBILE GUIDES */}
               <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="w-6 h-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center font-display font-bold text-xs text-indigo-700">2</span>
+                  <span className="w-6 h-6 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center font-display font-semibold text-xs text-neutral-700">2</span>
                   <span className="font-display font-bold text-base text-neutral-900">
                     {lang === 'ja' ? 'モバイル端末（iOS Safari / Android Chrome）での手順' : 'Mobile Platforms (iOS Safari / Android Chrome) Setup'}
                   </span>
@@ -1416,14 +1534,68 @@ if (inputElement instanceof HTMLElement) {
       </main>
 
       <footer className="bg-white border-t border-neutral-200 py-10 mt-16 select-none shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-semibold shadow shadow-indigo-100">
-              <Bookmark className="w-3.5 h-3.5 fill-white" />
+        
+        {/* Support & Sponsor Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 border-b border-neutral-200/50 pb-8">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+            <div className="max-w-xl">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2 bg-neutral-100 px-2.5 py-1 rounded-full border border-neutral-200/50">
+                <Heart className="w-3.5 h-3.5 text-red-550 fill-red-500 animate-pulse" />
+                {lang === 'ja' ? SPONSOR_CONFIG.header.ja : SPONSOR_CONFIG.header.en}
+              </span>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                {lang === 'ja' ? SPONSOR_CONFIG.footerNote.ja : SPONSOR_CONFIG.footerNote.en}
+              </p>
             </div>
-            <span className="text-neutral-500 text-xs font-sans">
-              &copy; 2026 Chatlet Bookmarklet Toolkit. Licensed under CC BY-NC-SA 4.0.
-            </span>
+            <div className="flex flex-wrap gap-2.5 w-full lg:w-auto shrink-0">
+              {SPONSOR_CONFIG.links.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex flex-col items-start bg-neutral-50 hover:bg-neutral-100/70 border border-neutral-200/80 rounded-xl p-3 min-w-[210px] flex-grow sm:flex-grow-0 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <span className="text-xs font-bold text-neutral-800 flex items-center gap-1">
+                    {lang === 'ja' ? link.labelJa : link.labelEn}
+                    <ExternalLink className="w-3 h-3 text-neutral-400" />
+                  </span>
+                  <span className="text-[10px] text-neutral-400 font-sans mt-0.5">
+                    {lang === 'ja' ? link.descJa : link.descEn}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-semibold shadow shadow-indigo-100">
+                <Bookmark className="w-3.5 h-3.5 fill-white" />
+              </div>
+              <span className="text-neutral-500 text-xs font-sans">
+                &copy; 2026 Chatlet Bookmarklet Toolkit. Licensed under CC BY-NC-SA 4.0.
+              </span>
+            </div>
+            {/* Soft inline footer GitHub Star widget */}
+            <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200/60 px-3 py-1 rounded-xl relative select-none">
+              <span className="text-[11px] font-sans text-neutral-500 font-medium">
+                {activeLang.starAppeals}
+              </span>
+              <div className="flex items-center min-h-[20px] scale-90 origin-left">
+                <a
+                  className="github-button"
+                  href="https://github.com/NoaRecord/Chatlet_Free"
+                  data-icon="octicon-star"
+                  data-size="large"
+                  aria-label="Star NoaRecord/Chatlet_Free on GitHub"
+                >
+                  Star
+                </a>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-4 text-xs text-neutral-400 flex-wrap justify-center">

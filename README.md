@@ -1,6 +1,11 @@
 # 🚀 Chatlet Bookmarklet Toolkit
 > **Use it. Customize it. Learn from it.**
 
+### 👉 [【Easy & Recommended】Customizer Generator (GitHub Pages) is HERE!](https://NoaRecord.github.io/Chatlet_Free/)
+*※ Instead of downloading code and parsing manually, dragging-and-dropping onto your browser bookmarks bar directly from our web generator is extremely easier, fast, and completely customizable!*
+
+---
+
 Chatlet Free is an **open-source, client-side browser bookmarklet** to dramatically speed up your workflow with ChatGPT.
 It is intentionally crafted as an interactive tutorial tool to learn how browsers interact with complex SPAs through custom DOM engines.
 
@@ -34,3 +39,8 @@ It is intentionally crafted as an interactive tutorial tool to learn how browser
 
 ## ⚖ License
 Licensed under [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](./LICENSE). Feel free to use, modify, and share under these terms.
+
+---
+
+## ⭐ Support the Project
+If you find this toolkit helpful, please support by clicking the **Star (⭐)** button in the top right of this page! Feel free to raise issues or request features anytime.
