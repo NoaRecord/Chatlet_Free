@@ -286,6 +286,7 @@ export default function App() {
 
   // Notifications
   const [copyState, setCopyState] = useState<{ [key: string]: boolean }>({});
+  const [applyFlash, setApplyFlash] = useState(false);
 
   const languages = {
     ja: {
@@ -468,7 +469,7 @@ export default function App() {
     if (draggableLinkRef.current) {
       draggableLinkRef.current.href = compiledCode.bookmarklet;
     }
-  }, [compiledCode.bookmarklet]);
+  }, [compiledCode.bookmarklet, activeTab]);
 
   useEffect(() => {
     // Dynamic execution parser for standard GitHub Star buttons to guarantee clean cross-react-render bindings
@@ -1112,6 +1113,8 @@ export default function App() {
                     type="button"
                     onClick={() => {
                       triggerCopy(compiledCode.bookmarklet, 'compile-trigger');
+                      setApplyFlash(true);
+                      setTimeout(() => setApplyFlash(false), 1500);
                     }}
                     className="w-full bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md"
                   >
@@ -1122,7 +1125,7 @@ export default function App() {
                   </button>
                   {copyState['compile-trigger'] && (
                     <div className="text-center font-semibold text-emerald-600 text-xs mt-2 transition-all">
-                      {lang === 'ja' ? '✓ 生成完了！設定を適用しました。右側のパネル（または下部）から登録・コピーが可能です。' : '✓ Successfully Compiled! Swiped settings to output. Copy or drag the code in the right column.'}
+                      {lang === 'ja' ? '✓ 生成完了！お気に入りボタンを最新にアップデートしてコードをコピーしました。' : '✓ Successfully Compiled! Swiped settings to output. Copy or drag the code in the right column.'}
                     </div>
                   )}
                 </div>
@@ -1138,7 +1141,11 @@ export default function App() {
                 </span>
                 
                 {/* 1. THE DRAGGABLE ANCHOR LINK BLOCK */}
-                <div className="bg-neutral-850 rounded-2xl p-5 border border-neutral-850 text-center mb-6 shadow-inner relative overflow-hidden group">
+                <div className={`rounded-2xl p-5 border text-center mb-6 shadow-inner relative overflow-hidden transition-all duration-300 ${
+                  applyFlash 
+                    ? 'border-emerald-500 bg-neutral-800/90 ring-4 ring-emerald-500/10' 
+                    : 'border-neutral-850 bg-neutral-850'
+                }`}>
                   <div className="absolute top-2 right-2 text-[9px] font-mono text-neutral-400 bg-neutral-950 border border-neutral-800 px-1.5 py-0.5 rounded">
                     Draggable Link
                   </div>
@@ -1149,7 +1156,7 @@ export default function App() {
                   {/* Draggable Anchor Literal Link! */}
                   <a
                     ref={draggableLinkRef}
-                    href="#"
+                    href={compiledCode.bookmarklet}
                     onClick={(e) => {
                       e.preventDefault();
                       alert(lang === 'ja' 
@@ -1157,7 +1164,11 @@ export default function App() {
                         : 'Do not click this button directly. Instead, drag and drop it onto your browser bookmarks toolbar to install!'
                       );
                     }}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl shadow-lg transition-all border font-sans text-sm font-bold text-white hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+                    className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl shadow-lg transition-all border font-sans text-sm font-bold text-white cursor-grab active:cursor-grabbing ${
+                      applyFlash 
+                        ? 'animate-bounce scale-110 ring-4 ring-emerald-400 ring-offset-2 ring-offset-neutral-900 border-white' 
+                        : 'hover:scale-105 active:scale-95'
+                    }`}
                     style={{ backgroundColor: customTheme, borderColor: customTheme }}
                   >
                     <Bookmark className="w-4 h-4 fill-white" />
