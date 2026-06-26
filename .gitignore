@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Brainstorm and private data for local/AI Studio use (never committed to GitHub)
+/brainstorm/
+/private/

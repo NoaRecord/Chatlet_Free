@@ -264,9 +264,47 @@ function generateBookmarkletCode(
   return { sourceCode, minifiedCode, bookmarklet };
 }
 
+const JA_DEFAULTS = [
+  { label: '進めて', value: '今の回答の続き、または次のステップを進めてください。' },
+  { label: '要約して', value: '直前の回答、または以下の文章を、要点が一目でわかるように簡潔に要約してください：\n\n' },
+  { label: '説明求む', value: '直前の回答（または指定のテーマ）について、専門用語を避け、初心者向けにわかりやすく直感的に説明してください：\n\n' }
+];
+
+const EN_DEFAULTS = [
+  { label: 'Continue', value: 'Please continue the previous response or proceed to the next step.' },
+  { label: 'Summarize', value: 'Please summarize the previous response or the text below into concise bullet points:\n\n' },
+  { label: 'Explain Simply', value: 'Please explain the previous response (or specific topic) in simple, intuitive terms, avoiding technical jargon:\n\n' }
+];
+
 export default function App() {
-  const [lang, setLang] = useState<'ja' | 'en'>('ja');
+  const [lang, setLang] = useState<'ja' | 'en'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('chatlet_lang');
+      if (saved === 'ja' || saved === 'en') {
+        return saved;
+      }
+      if (typeof navigator !== 'undefined') {
+        const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
+        if (browserLang && browserLang.toLowerCase().startsWith('ja')) {
+          return 'ja';
+        }
+      }
+    }
+    return 'en'; // Default to English for international audiences
+  });
   const [activeTab, setActiveTab] = useState<'home' | 'examples' | 'generator' | 'install' | 'learn' | 'videos' | 'repo'>('home');
+  
+  const isOfficialHost = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    const hn = window.location.hostname.toLowerCase();
+    return (
+      hn.includes('localhost') ||
+      hn.includes('127.0.0.1') ||
+      hn.includes('run.app') || // AI Studio Development Sandbox
+      hn.includes('noarecord.github.io') ||
+      hn.includes('another-world.site')
+    );
+  }, []);
   
   // Custom states for Generator
   const [customTitle, setCustomTitle] = useState('Chatlet Free');
@@ -274,11 +312,22 @@ export default function App() {
   const [customWidth, setCustomWidth] = useState<'normal' | 'wide' | 'narrow'>('normal');
   const [customLimit, setCustomLimit] = useState(10);
   const [enableLimit, setEnableLimit] = useState(true);
-  const [customPresets, setCustomPresets] = useState<PresetItem[]>([
-    { label: '進めて', value: '今の回答の続き、または次のステップを進めてください。' },
-    { label: '要約して', value: '直前の回答、または以下の文章を、要点が一目でわかるように簡潔に要約してください：\n\n' },
-    { label: '説明求む', value: '直前の回答（または指定のテーマ）について、専門用語を避け、初心者向けにわかりやすく直感的に説明してください：\n\n' }
-  ]);
+  const [customPresets, setCustomPresets] = useState<PresetItem[]>(() => {
+    // Pick presets during initialization based on current language
+    let initialLang: 'ja' | 'en' = 'en';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('chatlet_lang');
+      if (saved === 'ja' || saved === 'en') {
+        initialLang = saved;
+      } else if (typeof navigator !== 'undefined') {
+        const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
+        if (browserLang && browserLang.toLowerCase().startsWith('ja')) {
+          initialLang = 'ja';
+        }
+      }
+    }
+    return initialLang === 'ja' ? JA_DEFAULTS : EN_DEFAULTS;
+  });
 
   // Temporary generator input states
   const [newLabel, setNewLabel] = useState('');
@@ -287,6 +336,21 @@ export default function App() {
   // Notifications
   const [copyState, setCopyState] = useState<{ [key: string]: boolean }>({});
   const [applyFlash, setApplyFlash] = useState(false);
+
+  const handleToggleLang = () => {
+    const nextLang = lang === 'ja' ? 'en' : 'ja';
+    setLang(nextLang);
+    localStorage.setItem('chatlet_lang', nextLang);
+
+    // If the presets match the current language's defaults, auto-switch them to the next language's defaults!
+    const isMatchingJaDefaults = JSON.stringify(customPresets) === JSON.stringify(JA_DEFAULTS);
+    const isMatchingEnDefaults = JSON.stringify(customPresets) === JSON.stringify(EN_DEFAULTS);
+    if (nextLang === 'ja' && isMatchingEnDefaults) {
+      setCustomPresets(JA_DEFAULTS);
+    } else if (nextLang === 'en' && isMatchingJaDefaults) {
+      setCustomPresets(EN_DEFAULTS);
+    }
+  };
 
   const languages = {
     ja: {
@@ -589,7 +653,7 @@ export default function App() {
               { id: 'learn', label: lang === 'ja' ? '学習教材' : 'Learn', icon: BookOpen },
               { id: 'videos', label: lang === 'ja' ? 'レクチャー動画' : 'Videos', icon: Video },
               { id: 'repo', label: lang === 'ja' ? 'リポジトリ構成' : 'Repository', icon: Folder },
-            ].map((tab) => {
+            ].filter(tab => isOfficialHost || (tab.id !== 'learn' && tab.id !== 'videos')).map((tab) => {
               const TabIcon = tab.icon;
               const isSelected = activeTab === tab.id;
               return (
@@ -611,16 +675,18 @@ export default function App() {
 
           {/* Action Flags */}
           <div className="flex items-center gap-2.5 shrink-0">
-            <a
-              href="https://another-world.site/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-950 font-medium px-2 py-1.5 transition-colors whitespace-nowrap"
-            >
-              NoaRecord <ExternalLink className="w-3 h-3 text-neutral-400" />
-            </a>
+            {isOfficialHost && (
+              <a
+                href="https://another-world.site/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden lg:flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-950 font-medium px-2 py-1.5 transition-colors whitespace-nowrap animate-fade-in"
+              >
+                NoaRecord <ExternalLink className="w-3 h-3 text-neutral-400" />
+              </a>
+            )}
             <button
-              onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}
+              onClick={handleToggleLang}
               className="flex items-center gap-1 text-[11px] sm:text-xs text-neutral-600 hover:text-neutral-950 bg-neutral-100 hover:bg-neutral-200/80 px-2.5 py-1.5 rounded-lg transition-transform active:scale-95 border border-neutral-200/80 shrink-0 whitespace-nowrap select-none font-medium"
             >
               <Globe className="w-3.5 h-3.5 text-neutral-500" />
@@ -649,7 +715,7 @@ export default function App() {
           { id: 'learn', label: lang === 'ja' ? '学習教材' : 'Learn' },
           { id: 'videos', label: lang === 'ja' ? '動画' : 'Videos' },
           { id: 'repo', label: lang === 'ja' ? 'リポジトリ' : 'Repo' },
-        ].map((tab) => {
+        ].filter(tab => isOfficialHost || (tab.id !== 'learn' && tab.id !== 'videos')).map((tab) => {
           const isSelected = activeTab === tab.id;
           return (
             <button
@@ -680,15 +746,17 @@ export default function App() {
                     <Cpu className="w-3.5 h-3.5 text-neutral-300 animate-pulse" />
                     Chatlet Free Project
                   </span>
-                  <a
-                    href="https://another-world.site/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 bg-white ring-1 ring-neutral-250 hover:bg-neutral-50 px-3 py-1 rounded-full text-xs text-neutral-600 hover:text-neutral-900 font-medium transition-all group"
-                  >
-                    <span>Presented by <strong>NoaRecord</strong></span>
-                    <ExternalLink className="w-3 h-3 text-neutral-400 group-hover:text-neutral-800 transition-colors" />
-                  </a>
+                  {isOfficialHost && (
+                    <a
+                      href="https://another-world.site/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 bg-white ring-1 ring-neutral-250 hover:bg-neutral-50 px-3 py-1 rounded-full text-xs text-neutral-600 hover:text-neutral-900 font-medium transition-all group animate-fade-in"
+                    >
+                      <span>Presented by <strong>NoaRecord</strong></span>
+                      <ExternalLink className="w-3 h-3 text-neutral-400 group-hover:text-neutral-800 transition-colors" />
+                    </a>
+                  )}
                 </div>
                 <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-neutral-955 tracking-tight leading-none mb-6">
                   <span className="inline-block whitespace-nowrap">Use it.</span>{' '}
@@ -823,16 +891,18 @@ export default function App() {
             {/* QUICK STEPS INSTRUCTIONS HIGHLIGHT */}
             <div className="max-w-4xl mx-auto px-4 py-16 text-center">
               <h3 className="font-display font-bold text-xl sm:text-2xl mb-4 text-neutral-900">
-                🚀 ブックマーク登録するだけでChatGPTをもっと便利に
+                {lang === 'ja' ? '🚀 ブックマーク登録するだけでChatGPTをもっと便利に' : '🚀 Supercharge ChatGPT Simply with a Bookmark'}
               </h3>
               <p className="text-neutral-500 text-sm max-w-xl mx-auto mb-8">
-                サーバ不要のため個人情報は一切取得されません。開発者による100%安全保証済みのオープンソース教材です。
+                {lang === 'ja' 
+                  ? 'サーバ不要のため個人情報は一切取得されません。開発者による100%安全保証済みのオープンソース教材です。' 
+                  : 'Completely serverless. Zero personal data collection. A 100% safe, developer-guaranteed open-source educational toolkit.'}
               </p>
               <button
                 onClick={() => setActiveTab('install')}
                 className="inline-flex items-center gap-1 text-neutral-900 hover:text-neutral-950 font-semibold text-sm transition-colors group"
               >
-                <span>詳しい登録ガイドを見る</span>
+                <span>{lang === 'ja' ? '詳しい登録ガイドを見る' : 'View Detailed Setup Guide'}</span>
                 <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
@@ -1261,7 +1331,9 @@ export default function App() {
                 {activeLang.installHeader}
               </h1>
               <p className="text-neutral-500 text-sm mt-1">
-                デスクトップ、およびモバイル（iOS Safari/Android Chrome）でのブックマークレット登録・起動マニュアルです。
+                {lang === 'ja' 
+                  ? 'デスクトップ、およびモバイル（iOS Safari/Android Chrome）でのブックマークレット登録・起動マニュアルです。'
+                  : 'Desktop and mobile (iOS Safari/Android Chrome) bookmarklet registration and launch manual.'}
               </p>
             </div>
 
@@ -1271,29 +1343,50 @@ export default function App() {
               <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="w-6 h-6 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center font-display font-semibold text-xs text-neutral-700">1</span>
-                  <span className="font-display font-bold text-base text-neutral-900">PC（Chrome / Safari / Edge / Firefox）での登録</span>
+                  <span className="font-display font-bold text-base text-neutral-900">
+                    {lang === 'ja' ? 'PC（Chrome / Safari / Edge / Firefox）での登録' : 'PC (Chrome / Safari / Edge / Firefox) Installation'}
+                  </span>
                 </div>
                 <div className="ml-8 space-y-3.5 text-sm text-neutral-600 leading-relaxed font-sans">
                   <div className="bg-neutral-50 p-4 border border-neutral-100 rounded-xl flex items-center justify-between gap-4">
                     <div>
-                      <span className="block font-bold text-neutral-800">ドラッグ＆ドロップだけで完了：</span>
-                      <span className="text-xs text-neutral-400">ブックマークバーにお好みのボタンを直接ドラッグします。詳細はジェネレータータブを参照してください。</span>
+                      <span className="block font-bold text-neutral-800">
+                        {lang === 'ja' ? 'ドラッグ＆ドロップだけで完了：' : 'Instant Drag & Drop Setup:'}
+                      </span>
+                      <span className="text-xs text-neutral-400">
+                        {lang === 'ja' 
+                          ? 'ブックマークバーにお好みのボタンを直接ドラッグします。詳細はジェネレータータブを参照してください。'
+                          : 'Simply drag and drop your preferred button directly to your Bookmarks Bar. See the Generator tab for details.'}
+                      </span>
                     </div>
                     <button
                       onClick={() => setActiveTab('generator')}
                       className="bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg px-4 py-2 hover:shadow-md text-xs font-semibold whitespace-nowrap shrink-0 transition-transform active:scale-95"
                     >
-                      ジェネレーターへ移動
+                      {lang === 'ja' ? 'ジェネレーターへ移動' : 'Go to Generator'}
                     </button>
                   </div>
                   <p>
-                    <span className="font-bold text-neutral-800">手動登録の手順：</span>
+                    <span className="font-bold text-neutral-800">
+                      {lang === 'ja' ? '手動登録の手順：' : 'Manual Setup Steps:'}
+                    </span>
                   </p>
-                  <ol className="list-decimal pl-5 space-y-2 text-xs">
-                    <li>ブラウザのブックマークバーやお気に入りに、適当なウェブページ（本日のYahooでも何でも可）を一旦ダミー登録します。</li>
-                    <li>登録したブックマークをお気に入り一覧で右クリックし、<strong>「編集」</strong>、または<strong>「URLを編集」</strong>を選択します。</li>
-                    <li>ブックマーク名をお好みの表示（例：<code className="bg-neutral-100 px-1 py-0.5 rounded font-bold font-mono">Chatlet Free</code>）に変更。</li>
-                    <li>URL入力ボックスに、コピーした minified ブックマークレットコードを<strong>全てペースト（貼付け）</strong>して保存します。</li>
+                  <ol className="list-decimal pl-5 space-y-2 text-xs text-neutral-500">
+                    {lang === 'ja' ? (
+                      <>
+                        <li>ブラウザのブックマークバーやお気に入りに、適当なウェブページ（本日のYahooでも何でも可）を一旦ダミー登録します。</li>
+                        <li>登録したブックマークをお気に入り一覧で右クリックし、<strong>「編集」</strong>、または<strong>「URLを編集」</strong>を選択します。</li>
+                        <li>ブックマーク名をお好みの表示（例：<code className="bg-neutral-100 px-1 py-0.5 rounded font-bold font-mono text-neutral-800">Chatlet Free</code>）に変更。</li>
+                        <li>URL入力ボックスに、コピーした minified ブックマークレットコードを<strong>全てペースト（貼付け）</strong>して保存します。</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>Bookmark any random web page temporarily to your browser Bookmarks Bar (e.g., this page or Google).</li>
+                        <li>Right-click the newly added bookmark in your bookmarks bar and select <strong>"Edit"</strong> or <strong>"Properties"</strong>.</li>
+                        <li>Change the bookmark name to anything you like (e.g., <code className="bg-neutral-100 px-1 py-0.5 rounded font-bold font-mono text-neutral-800">Chatlet Free</code>).</li>
+                        <li>Replace the entire URL input box content with your <strong>copied minified bookmarklet code (paste everything)</strong> and save.</li>
+                      </>
+                    )}
                   </ol>
                 </div>
               </div>
@@ -1325,15 +1418,32 @@ export default function App() {
 
 
         {/* LEARN TAB */}
-        {activeTab === 'learn' && (
+        {activeTab === 'learn' && isOfficialHost && (
           <div className="max-w-4xl mx-auto px-4 py-12 animate-fade-in text-neutral-800">
             <div className="border-b border-neutral-200 pb-5 mb-8">
               <h1 className="font-display font-extrabold text-3xl text-neutral-900 tracking-tight">
                 {activeLang.learnHeader}
               </h1>
               <p className="text-neutral-500 text-sm mt-1">
-                JavaScriptの基礎から、ChatGPTのDOM構造、AI共同開発によるカスタム方法までを体系化された学習ガイドです。
+                {lang === 'ja' 
+                  ? 'JavaScriptの基礎から、ChatGPTのDOM構造、AI共同開発によるカスタム方法までを体系化された学習ガイドです。'
+                  : 'A systematic learning guide covering JavaScript basics, ChatGPT DOM structures, and AI-assisted custom creation.'}
               </p>
+              
+              {/* Note about Japanese tutorials */}
+              <div className="mt-4 bg-neutral-50 border border-neutral-200/60 rounded-xl p-3.5 text-xs text-neutral-500 leading-relaxed font-sans flex items-start gap-2.5">
+                <span className="text-neutral-400 select-none text-sm">🌐</span>
+                <div>
+                  <p className="font-semibold text-neutral-700">
+                    {lang === 'ja' ? '※ 学習言語に関するお知らせ' : '※ Language Notice for Tutorials'}
+                  </p>
+                  <p className="mt-0.5">
+                    {lang === 'ja' 
+                      ? '学習教材の解説記事や外部解説（note等のマガジン記事）は主に日本語で記述されています。note.com独自の自動翻訳機能（単体無料記事から順次対応中、マガジン記事は今後対応予定）や、ブラウザの翻訳機能をご活用いただけますと幸いです。'
+                      : 'Our tutorial articles and external deep-dives (such as note.com magazine posts) are primarily written in Japanese. While note.com is gradually rolling out its own automatic translation features (currently supporting standalone free articles, with magazine support coming soon), we highly encourage using built-in browser translation tools in the meantime.'}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -1354,7 +1464,10 @@ export default function App() {
                         e.preventDefault();
                         setActiveTab('repo');
                         setSelectedRepoFile('docs/customization.md');
-                        alert('リポジトリタブのエクスプローラーでdocs/customization.mdを表示します。');
+                        alert(lang === 'ja' 
+                          ? 'リポジトリタブのエクスプローラーでdocs/customization.mdを表示します。'
+                          : 'Opening docs/customization.md inside the repository file explorer.'
+                        );
                       }
                     }}
                     target={item.link.startsWith('#') ? '_self' : '_blank'}
@@ -1371,28 +1484,58 @@ export default function App() {
             {/* In-depth educational docs inside layout */}
             <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
               <h3 className="font-display font-bold text-lg text-neutral-900 border-b border-neutral-100 pb-3 mb-4">
-                💡 技術的読解：最新サイトの入力欄を自動制御する技術
+                {lang === 'ja' 
+                  ? '💡 技術的読解：最新サイトの入力欄を自動制御する技術' 
+                  : '💡 Tech Deep-Dive: Controlling Modern Form Elements in SPAs'}
               </h3>
               <div className="text-sm text-neutral-600 leading-relaxed font-sans space-y-4">
-                <p>
-                  ChatGPTをはじめとした最近の高度なSPA（シングルページアプリケーション）では、テキスト入力欄の
-                  「value」変更をJavaScriptの変数変更（<code className="bg-neutral-100 px-1 font-mono">textarea.value = text</code>）だけで更新しようとしても、画面内部のReactステートが値の変更をキャッチしてくれません。ボタンがクリックできない状態のままになってしまいます。
-                </p>
-                <p>
-                  Chatlet Freeはこの問題を克服するため、外部フレームワークを呼び出すことなく純粋なJavaScript（JS）だけで入力欄にテキストを設定後、
-                  <strong>Reactのネイティブハンドラー（イベントバブル）</strong>をフックする以下のカスタムコードを走らせています。
-                </p>
+                {lang === 'ja' ? (
+                  <>
+                    <p>
+                      ChatGPTをはじめとした最近の高度なSPA（シングルページアプリケーション）では、テキスト入力欄の
+                      「value」変更をJavaScriptの変数変更（<code className="bg-neutral-100 px-1 font-mono">textarea.value = text</code>）だけで更新しようとしても、画面内部のReactステートが値の変更をキャッチしてくれません。ボタンがクリックできない状態のままになってしまいます。
+                    </p>
+                    <p>
+                      Chatlet Freeはこの問題を克服するため、外部フレームワークを呼び出すことなく純粋なJavaScript（JS）だけで入力欄にテキストを設定後、
+                      <strong>Reactのネイティブハンドラー（イベントバブル）</strong>をフックする以下のカスタムコードを走らせています。
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      In modern Single Page Applications (SPAs) like ChatGPT, simply updating a text input’s raw value via JavaScript (<code className="bg-neutral-100 px-1 font-mono">textarea.value = text</code>) will not update the virtual DOM or notify React's internal state managers. As a result, the "Send" button remains locked or unclickable.
+                    </p>
+                    <p>
+                      To overcome this hurdle without bundling external frameworks, Chatlet Free writes text directly to the input field and immediately fires a synthetic <strong>React Native Event Hook (Event Bubbling)</strong> with the following pure JavaScript code:
+                    </p>
+                  </>
+                )}
+                
                 <pre className="font-mono text-xs bg-neutral-900 text-neutral-300 p-4 rounded-xl leading-relaxed whitespace-pre overflow-x-auto">
-{`// Reactへ「キー入力が手動で行われた」とDOMレベルで信じさせるために
+{lang === 'ja' 
+? `// Reactへ「キー入力が手動で行われた」とDOMレベルで信じさせるために
 // バブリングとキャンセル可能な設定でinputイベントを発行します
+inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+if (inputElement instanceof HTMLElement) {
+    inputElement.focus();
+}`
+: `// Trick React into believing this input was typed manually by a real user
+// Dispatch an input event with bubbles and cancelable enabled
 inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
 if (inputElement instanceof HTMLElement) {
     inputElement.focus();
 }`}
                 </pre>
-                <p>
-                  このように「既存の高度な大企業アプリを壊さずに安全にハックする」というリアルなDOMプログラミングの現場知見を楽しく学べるのが、Bookmarkletを学習教材にする最大のメリットです。
-                </p>
+                
+                {lang === 'ja' ? (
+                  <p>
+                    このように「既存の高度な大企業アプリを壊さずに安全にハックする」というリアルなDOMプログラミングの現場知見を楽しく学べるのが、Bookmarkletを学習教材にする最大のメリットです。
+                  </p>
+                ) : (
+                  <p>
+                    Learning how to interact safely with heavily optimized production systems without breaking their standard event handling logic is the ultimate real-world web engineering experience that bookmarklet development uniquely provides!
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -1400,7 +1543,7 @@ if (inputElement instanceof HTMLElement) {
 
 
         {/* VIDEOS TAB */}
-        {activeTab === 'videos' && (
+        {activeTab === 'videos' && isOfficialHost && (
           <div className="max-w-4xl mx-auto px-4 py-16 animate-fade-in text-neutral-800 text-center">
             <div className="border-b border-neutral-200 pb-5 mb-10">
               <h1 className="font-display font-extrabold text-3xl text-neutral-900 tracking-tight">
@@ -1547,38 +1690,40 @@ if (inputElement instanceof HTMLElement) {
       <footer className="bg-white border-t border-neutral-200 py-10 mt-16 select-none shrink-0">
         
         {/* Support & Sponsor Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 border-b border-neutral-200/50 pb-8">
-          <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
-            <div className="max-w-xl">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2 bg-neutral-100 px-2.5 py-1 rounded-full border border-neutral-200/50">
-                <Heart className="w-3.5 h-3.5 text-red-550 fill-red-500 animate-pulse" />
-                {lang === 'ja' ? SPONSOR_CONFIG.header.ja : SPONSOR_CONFIG.header.en}
-              </span>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                {lang === 'ja' ? SPONSOR_CONFIG.footerNote.ja : SPONSOR_CONFIG.footerNote.en}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2.5 w-full lg:w-auto shrink-0">
-              {SPONSOR_CONFIG.links.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex flex-col items-start bg-neutral-50 hover:bg-neutral-100/70 border border-neutral-200/80 rounded-xl p-3 min-w-[210px] flex-grow sm:flex-grow-0 transition-all hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <span className="text-xs font-bold text-neutral-800 flex items-center gap-1">
-                    {lang === 'ja' ? link.labelJa : link.labelEn}
-                    <ExternalLink className="w-3 h-3 text-neutral-400" />
-                  </span>
-                  <span className="text-[10px] text-neutral-400 font-sans mt-0.5">
-                    {lang === 'ja' ? link.descJa : link.descEn}
-                  </span>
-                </a>
-              ))}
+        {isOfficialHost && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 border-b border-neutral-200/50 pb-8 animate-fade-in">
+            <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+              <div className="max-w-xl">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2 bg-neutral-100 px-2.5 py-1 rounded-full border border-neutral-200/50">
+                  <Heart className="w-3.5 h-3.5 text-red-550 fill-red-500 animate-pulse" />
+                  {lang === 'ja' ? SPONSOR_CONFIG.header.ja : SPONSOR_CONFIG.header.en}
+                </span>
+                <p className="text-xs text-neutral-500 leading-relaxed">
+                  {lang === 'ja' ? SPONSOR_CONFIG.footerNote.ja : SPONSOR_CONFIG.footerNote.en}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2.5 w-full lg:w-auto shrink-0">
+                {SPONSOR_CONFIG.links.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex flex-col items-start bg-neutral-50 hover:bg-neutral-100/70 border border-neutral-200/80 rounded-xl p-3 min-w-[210px] flex-grow sm:flex-grow-0 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <span className="text-xs font-bold text-neutral-800 flex items-center gap-1">
+                      {lang === 'ja' ? link.labelJa : link.labelEn}
+                      <ExternalLink className="w-3 h-3 text-neutral-400" />
+                    </span>
+                    <span className="text-[10px] text-neutral-400 font-sans mt-0.5">
+                      {lang === 'ja' ? link.descJa : link.descEn}
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-4">
